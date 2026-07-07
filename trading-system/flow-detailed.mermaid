@@ -1,0 +1,56 @@
+flowchart TD
+    U([User request]) --> DSO
+
+    subgraph DS["DECISION-SUPPORT (proposes, never executes)"]
+        DSO["orchestrator<br/>manifest · retry cap 1 · HALT/DEGRADE"]
+        F["fetch-agent<br/>cache-first · schema-hash · 2-source"]
+        V["valuation-agent<br/>multiples · dual-constraint sizing"]
+        R["risk-agent<br/>6 checks · channel tags · bear case"]
+        P["portfolio-agent<br/>multi-name only"]
+        AUX["tax / scenario / earnings /<br/>backtester / alerts / audit"]
+
+        DSO --> F -->|"sourced facts"| V -->|"HALT if unsourced"| R
+        R --> P
+        DSO -.->|on demand| AUX
+    end
+
+    R -->|"proposal: {thesis, sizing,<br/>invalidation_trigger, timestamp}"| L1
+
+    subgraph RO["RISK-OVERSIGHT (veto final, fail closed)"]
+        L1["limits-agent<br/>position · loss · concentration"]
+        E1["exposure-agent<br/>tag correlation · net FX"]
+        D1["drawdown-agent<br/>max-DD → HALT-all"]
+        UW["unwind-agent<br/>proposes only, confirm-gated"]
+        E1 --> L1
+        D1 -->|"breach"| KS
+        D1 -->|"breach"| UW
+    end
+
+    L1 -->|"VETO"| REJ([Rejected — logged, final])
+    L1 -->|"PASS"| VA
+
+    subgraph EX["EXECUTOR (PAPER · 5 gates · idempotent)"]
+        VA["1· validate-agent<br/>freshness + trigger re-check"]
+        LA["2· limit-agent<br/>fail closed"]
+        CA["3· confirm-agent<br/>EVERY order · human · explicit"]
+        OA["4· order-agent<br/>kill-switch check → paper order"]
+        RC["5· reconcile-agent<br/>fill diff · audit entry"]
+        VA -->|PASS| LA -->|PASS| CA -->|"human YES"| OA -->|fill| RC
+    end
+
+    VA -->|"stale / trigger fired /<br/>expired"| DSO
+    CA -->|"reject / timeout"| REJ
+    KS["🔴 KILL-SWITCH<br/>global HALT-all"] -.->|"checked immediately<br/>before placement"| OA
+    UW -->|"unwind proposal"| VA
+    RC -->|"post-fill state"| L1
+    RC --> LOG[("append-only<br/>audit log")]
+    L1 -.-> LOG
+    CA -.-> LOG
+    DSO -.-> LOG
+
+    style DS fill:#0d2b47,color:#fff
+    style RO fill:#470d0d,color:#fff
+    style EX fill:#0d4729,color:#fff
+    style KS fill:#c0392b,color:#fff
+    style REJ fill:#444,color:#fff
+    style LOG fill:#2a2a2a,color:#fff
