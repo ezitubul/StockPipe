@@ -1,5 +1,5 @@
-# v1.2 — 2026-07-07
-# Changes: autonomous discovery loop (screener → pipeline → queue); review-queue mechanics; loop budget caps
+# v1.3 — 2026-07-07
+# Changes: hash-chained audit log entry format (tamper-evidence)
 # TOP ORCHESTRATOR — trading system
 
 ## Purpose
@@ -58,7 +58,9 @@ The human confirm gate is STRUCTURAL, not configurational. There is no flag, mod
 - **audit-agent** (decision-support subtree) is system-wide in scope: runs all three subtree checklists plus the system-level boundary checklist.
 
 ## Global state
-- Single append-only audit log; every subtree writes (analysis emitted, veto, confirm, order, fill). Timestamped, reason-tagged.
+- Single append-only, hash-chained audit log; every subtree writes (analysis emitted, veto, confirm, order, fill, halt, escalation, kill_switch_toggle, injection_flagged). Timestamped, reason-tagged.
+- **Audit log entry format**: `seq` (monotonic), `timestamp` (ISO 8601), `actor` (`<subtree>/<agent-name>`, e.g. `executor/order-agent`, or `top-orchestrator`), `event_type` (enum: `analysis_emitted`, `veto`, `confirm`, `order_placed`, `fill`, `halt`, `escalation`, `kill_switch_toggle`, `injection_flagged`), `payload` (event-specific, reason-tagged), `prev_entry_hash`, `entry_hash`.
+- `entry_hash` = hash over `{seq, timestamp, actor, event_type, payload, prev_entry_hash}`, computed by the writing agent itself at write time, using the current tail entry's `entry_hash` (read immediately before append) as its own `prev_entry_hash`. Genesis entry (`seq=0`) uses sentinel `prev_entry_hash = "GENESIS"`. Entries are never edited or removed after append — enforced by the chain, not just convention. Chain-integrity verification is audit-agent's duty (see decision-support/agents/audit-agent.md).
 - Kill-switch state readable by all subtrees; when engaged, executor refuses all orders.
 - Mode flag: PAPER (current). Flipping to LIVE is a deliberate, out-of-band config change — never an in-session decision, never LLM-initiated.
 

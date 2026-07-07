@@ -1,4 +1,5 @@
-# v1.0 — 2026-07-07
+# v1.1 — 2026-07-07
+# Changes: scheduled runs and TTL windows keyed to trading days
 # Subagent: screener-agent (decision-support subtree)
 
 ## Purpose
@@ -12,6 +13,8 @@ Requires user-defined screening criteria set OUT-OF-BAND (like risk limits): exp
 - Screens on cached EOD data by default (fetch-agent cache) — no live per-name fetches across the universe.
 - Same sourcing discipline as fetch-agent: schema-validated data only; two-source confirmation before a candidate is emitted.
 - Dedup: candidate already analyzed within TTL window, or already in queue/portfolio → skip, log the skip.
+- Scheduled runs align to trading days per schemas/calendar.md — a run scheduled for a non-trading day (weekend or Israeli holiday) is deferred to the next trading day's open, not executed against unchanged EOD cache as if fresh.
+- TTL and dedup windows are counted in trading days, not calendar days — weekends/holidays don't advance or reset the TTL clock.
 
 ## Hard caps (budget circuit breakers — fail closed)
 - Max N candidates emitted per run (default 5).

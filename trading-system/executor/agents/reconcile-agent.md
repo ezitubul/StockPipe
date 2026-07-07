@@ -1,4 +1,5 @@
-# v1.0 — 2026-07-07
+# v1.1 — 2026-07-07
+# Changes: clarify fill entry is a separate chained entry from order-agent's placement entry
 # Subagent: reconcile-agent (executor subtree)
 
 ## Purpose
@@ -13,7 +14,7 @@ Requires order-agent output (placed order) + expected state (from confirmed orde
 - Post-fill portfolio state → hand to risk-oversight for limit re-check.
 
 ## Output
-- Audit log entry: order, fill, delta, timestamp, reason-tagged.
+- Audit log entry (`event_type=fill`): fill-vs-expected diff, timestamp, reason-tagged — a separate chained entry from order-agent's `order_placed` entry (see executor orchestrator's idempotency-key section), not a duplicate record of placement.
 - Mismatch flag if fill ≠ expected → surface to top orchestrator + risk-oversight.
 
 ## Non-goals
