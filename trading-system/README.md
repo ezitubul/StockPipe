@@ -115,9 +115,17 @@ trading-system/
 │   └── agents/               orchestrator + validate / limit / confirm /
 │                             order / reconcile-agent + eval-checklist
 │
-└── risk-oversight/           sits above both — veto final, fail closed
-    └── agents/               orchestrator + limits / exposure / drawdown /
-                              unwind-agent + eval-checklist
+├── risk-oversight/           sits above both — veto final, fail closed
+│   └── agents/               orchestrator + limits / exposure / drawdown /
+│                             unwind-agent + eval-checklist
+│
+└── virtual-portfolio-simulator/   standalone — autonomous ₪100,000 PAPER
+                              simulation, no broker/real-capital path, so it
+                              self-executes without the confirm gate above
+    ├── CLAUDE.md             routine, decision process, risk rules, fees,
+    │                         execute_virtual_trade contract
+    ├── eval-checklist.md
+    └── state/                portfolio.json + trade-log.jsonl
 ```
 
 ## Core invariants
