@@ -1,5 +1,11 @@
 # TASE Trading System — Agentic Scaffold
 
+> **Earlier design, not under active development.** `../market-watch/` is the
+> active project — a fuller implementation with a tested deterministic core,
+> a real CLI, and working CI. This tree is kept for reference and for its
+> confirm-gated executor design, which some future work here may still draw
+> on.
+
 Three-subtree agent hierarchy for Israeli stock market (TASE) analysis and confirm-gated paper execution, built for Claude Code. Decision-support proposes, risk-oversight enforces, executor acts — every order human-confirmed, PAPER mode only.
 
 ## High-level flow
