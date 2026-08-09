@@ -40,6 +40,10 @@ on:
 
 permissions:
   contents: read              # workflow default - decide overrides this itself
+  id-token: write              # claude-code-action requires this even with an
+                                # explicit anthropic_api_key - it fetches a GitHub
+                                # OIDC token as part of its own setup regardless,
+                                # and hard-fails after 3 retries without this.
 
 jobs:
   scan:
@@ -107,6 +111,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write            # the only job in this repo that carries this
+      id-token: write            # job-level permissions replace the workflow
+                                  # default entirely, so this needs restating -
+                                  # see the top-level comment for why it's needed
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
