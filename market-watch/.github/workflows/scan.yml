@@ -76,7 +76,23 @@ jobs:
             Follow the procedure in market-watch/.claude/commands/scan.md, with
             every path in it read as relative to market-watch/ (e.g. mw.py is
             market-watch/mw.py, state/briefs/ is market-watch/state/briefs/).
-            Write briefs to market-watch/state/briefs/ and print the ranked
+
+            Do not use the Task tool to invoke named subagents (macro-scout,
+            asia-scout, etc.) - this container does not discover
+            market-watch/.claude/agents/ from its working directory. Instead,
+            read each relevant agent file with the Read tool
+            (market-watch/.claude/agents/macro-scout.md first, then the
+            regional scout files scan.md's clock table selects) and carry out
+            what each says yourself, writing one brief per agent to
+            market-watch/state/briefs/<region-or-macro>-<date>.json exactly as
+            each file's JSON schema specifies.
+
+            Stop there - do NOT read or act on synthesizer.md. Merging briefs
+            into a ranked watchlist is the decide job's first step, reading
+            the exact files you write here; running it in this job too would
+            just duplicate that work. Print a short plain-text summary of what
+            you fetched and wrote (regime in a sentence or two, which briefs
+            landed, anything a scout could not verify) - not a ranked
             watchlist. Do NOT run `mw.py apply`. Do NOT commit anything.
           claude_args: |
             --allowedTools "WebSearch,WebFetch,Read,Write(./market-watch/state/briefs/**),Bash(python market-watch/mw.py status),Bash(python market-watch/mw.py clock),Bash(python market-watch/mw.py rates:*),Bash(python market-watch/mw.py quote:*),Bash(python market-watch/mw.py gates:*)"
