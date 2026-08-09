@@ -24,7 +24,9 @@ around Asia close, TASE/EU midday, the TASE+EU+NY overlap, and the NY close):
 (never the open web) and applies through `lib/risk_gates.py` with no human
 confirmation - see the Autonomy section in `CLAUDE.md` and D5/D12/D14 in
 `DECISIONS.md` for why that split is what makes unattended operation safe
-rather than reckless. Requires `ANTHROPIC_API_KEY` as a repository secret.
+rather than reckless. Requires an Anthropic API key in a secret named
+`claude_key` (repository secret, or an environment secret on an environment
+the `scan`/`decide` jobs declare via `environment:`).
 This wiring is new - dispatch it manually once (`workflow_dispatch`) and read
 the run before trusting the cron.
 
