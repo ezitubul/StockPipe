@@ -1,5 +1,11 @@
 # TASE Trading System — Agentic Scaffold
 
+> **Earlier design, not under active development.** `../market-watch/` is the
+> active project — a fuller implementation with a tested deterministic core,
+> a real CLI, and working CI. This tree is kept for reference and for its
+> confirm-gated executor design, which some future work here may still draw
+> on.
+
 Three-subtree agent hierarchy for Israeli stock market (TASE) analysis and confirm-gated paper execution, built for Claude Code. Decision-support proposes, risk-oversight enforces, executor acts — every order human-confirmed, PAPER mode only.
 
 ## High-level flow
@@ -119,6 +125,19 @@ trading-system/
     └── agents/               orchestrator + limits / exposure / drawdown /
                               unwind-agent + eval-checklist
 ```
+
+## Related: market-watch
+
+`../market-watch/` (repo root) is a separate, self-contained ₪100,000 PAPER
+simulation system — deterministic Python core with tests, a real CLI, real
+Claude Code subagents, and its own CI. It supersedes an earlier
+`virtual-portfolio-simulator/` scaffold that lived under this tree. It is
+deliberately **not** nested here and does not route through this tree's
+confirm-gated `executor/`: it has no broker connection or path to real
+capital, so — per its own `CLAUDE.md` — it is allowed to self-execute
+simulated fills without a human confirm step, a reasoning that would not hold
+if this system were ever wired to a real venue. See `market-watch/README.md`
+and `market-watch/CLAUDE.md` for the full design.
 
 ## Core invariants
 
