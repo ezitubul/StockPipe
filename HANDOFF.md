@@ -105,17 +105,21 @@ better than write a bad line into a JSON brief that the gates will still block.
 Everything that touches the ledger never reads the web.
 
 `tools` is an allowlist of tool names and does not accept command patterns.
-Scoping `Bash` is done in `.claude/settings.json`, which also denies `git push`
-and writes to `lib/` and `.claude/` - an agent may move the ledger but not
-rewrite its own limits.
+Scoping `Bash` is done in `.claude/settings.json`, which denies writes to
+`lib/` and `.claude/` - an agent may move the ledger but not rewrite its own
+limits or subagent definitions.
 
-That file governs **local interactive sessions only** - the `claude-code-action`
-runs in `.github/workflows/` never auto-discover it (no working-directory
-input, and it lives at `market-watch/.claude/settings.json`, not the checkout
-root), so each CI job sets its own `--allowedTools` string directly in its
-workflow step. `scan.decide` is deliberately given `Bash(git push:*)`, which
-`.claude/settings.json` denies locally - that's correct, not a bypass: a local
-session has you to commit; `decide` has nobody, so pushing its own commit is
-the point, not a hole. Any change to a workflow's `--allowedTools` is a change
-to that job's actual privilege set regardless of what `.claude/settings.json`
-says.
+**`git push` is a live open question, not settled policy.** `.claude/` used
+to live under `market-watch/`, a directory `claude-code-action` never
+discovered from the checkout root - so `.claude/settings.json`'s permissions
+were local-session-only in practice, and denying `git push` there cost
+nothing for CI. Now that `.claude/` sits at the true repo root, the action
+likely auto-discovers it for every job, including `scan.decide`, which needs
+`git push` to do its one job (D14) - and `deny` rules generally beat `allow`
+elsewhere, so a blanket local deny would probably break it silently. The fix
+(dropping `Bash(git push:*)` from `deny`, since each job's own
+`--allowedTools` is the real, reviewable control - `scan` never gets it,
+`decide` does on purpose) needs a human's go-ahead before it lands, because
+loosening a denylist is exactly the kind of edit that shouldn't happen on
+autopilot. Check `.claude/settings.json`'s current `deny` list against this
+paragraph before trusting `scan.decide` to actually commit anything.

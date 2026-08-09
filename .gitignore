@@ -2,3 +2,9 @@
 trading-system/decision-support/.state/cache/
 trading-system/decision-support/.state/schema-hashes/
 trading-system/decision-support/.state/fetch-log.jsonl
+
+# market-watch
+__pycache__/
+.pytest_cache/
+state/briefs/
+*.pyc

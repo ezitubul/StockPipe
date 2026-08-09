@@ -1,23 +1,42 @@
-# StockPipe
+# market-watch
 
-## market-watch — the active project
+    python -m pytest tests/ -q        # 39 tests, run before anything
+    python mw.py clock                # which venues are live right now
+    python mw.py status               # the book
+    python mw.py rates --set USD=3.01 # a rate you verified
 
-`market-watch/` is a multi-market (TASE/US/Europe/Asia) ₪100,000 PAPER trading
-research system: deterministic, tested Python core (`lib/`) for money/session/
-risk math, a real CLI (`mw.py`), genuine Claude Code subagents and slash
-commands, and GitHub Actions CI. No brokerage connection exists or may be
-added — `mw.py apply` writes a JSON file, nothing more.
+Then, inside Claude Code:
 
-Start here: `market-watch/README.md` (quickstart), `market-watch/CLAUDE.md`
-(design), `market-watch/DECISIONS.md` (why, and what was rejected).
+    /scan       macro + regional scouts -> ranked watchlist
+    /propose    one candidate -> priced, gated order proposal
+    /confirm    execute, after you approve in writing
+    /status     positions with stop and target alerts
+    /rates      refresh FX from a verified source
+    /halt       stop trading
 
-## trading-system — earlier design, kept for reference
+Read `CLAUDE.md` first. The units section is not optional reading.
 
-`trading-system/` is a three-subtree agent hierarchy (decision-support /
-risk-oversight / executor) built around a structural, always-on human confirm
-gate before any order. It predates `market-watch` and is not under active
-development; `market-watch/README.md` explains how the two differ in their
-autonomy model. See `trading-system/README.md`.
+## Scheduled and unattended
 
-Run Claude Code from inside whichever project you're working in — each has
-its own `CLAUDE.md`.
+`.github/workflows/scan.yml` runs the whole thing on a cron (weekday windows
+around Asia close, TASE/EU midday, the TASE+EU+NY overlap, and the NY close):
+`scan` reads the news and writes briefs, `decide` reads only those briefs
+(never the open web) and applies through `lib/risk_gates.py` with no human
+confirmation - see the Autonomy section in `CLAUDE.md` and D5/D12/D14 in
+`DECISIONS.md` for why that split is what makes unattended operation safe
+rather than reckless. Requires an Anthropic API key in a secret named
+`claude_key` (repository secret, or an environment secret on an environment
+the `scan`/`decide` jobs declare via `environment:`).
+This wiring is new - dispatch it manually once (`workflow_dispatch`) and read
+the run before trusting the cron.
+
+The manual path (`/propose` then `/confirm`, or `execute.yml` dispatched by
+hand behind a required reviewer) still exists for anything you want to decide
+yourself instead.
+
+## Also in this repo
+
+`trading-system/` is an earlier, separate design (a three-subtree agent
+hierarchy built around a structural, always-on human confirm gate before any
+order) predating this project and not under active development. Kept for
+reference; see `trading-system/README.md`.

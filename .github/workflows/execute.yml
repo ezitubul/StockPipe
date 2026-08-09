@@ -21,9 +21,6 @@ jobs:
   execute:
     runs-on: ubuntu-latest
     environment: execution          # required reviewer lives here
-    defaults:
-      run:
-        working-directory: market-watch
     steps:
       - uses: actions/checkout@v4
         with:
