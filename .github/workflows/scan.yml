@@ -30,7 +30,12 @@ on:
   workflow_dispatch:
     inputs:
       require_open:
-        description: Market that must be open, or ANY
+        description: >-
+          ANY bypasses the market-hours guard entirely, for manually testing
+          the pipeline outside trading hours. A specific market code (e.g.
+          TASE) requires just that one. Only takes effect on a manual
+          dispatch - the schedule trigger always enforces the full
+          TASE/US/XETRA/TSE set below, regardless of this input.
         default: ANY
 
 permissions:
@@ -50,7 +55,19 @@ jobs:
       - name: Session guard
         id: guard
         continue-on-error: true
-        run: python mw.py clock --require TASE --require US --require XETRA --require TSE
+        # workflow_dispatch + require_open=ANY bypasses the guard entirely
+        # (for manually testing the pipeline outside trading hours);
+        # workflow_dispatch + a specific market code requires just that one;
+        # the schedule trigger (no inputs available) always gets the full set.
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.require_open }}" = "ANY" ]; then
+            echo "Manual dispatch, require_open=ANY - bypassing the market-hours guard for testing."
+            python mw.py clock
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.require_open }}" ]; then
+            python mw.py clock --require "${{ github.event.inputs.require_open }}"
+          else
+            python mw.py clock --require TASE --require US --require XETRA --require TSE
+          fi
 
       - name: Abort when every venue is shut
         if: steps.guard.outcome == 'failure'
