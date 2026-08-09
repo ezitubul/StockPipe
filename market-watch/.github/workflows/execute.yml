@@ -1,0 +1,47 @@
+# The human gate, enforced by GitHub rather than by good intentions.
+#
+# This workflow is manual only and is bound to the `execution` environment.
+# Configure that environment with a REQUIRED REVIEWER (yourself) in
+# Settings -> Environments. The job then pauses until you approve it in the
+# GitHub UI. That approval - not a passing gate set, not a confident thesis -
+# is what authorises the ledger write.
+name: execute
+
+on:
+  workflow_dispatch:
+    inputs:
+      order_sha:
+        description: git sha of the commit holding state/pending-order.json
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  execute:
+    runs-on: ubuntu-latest
+    environment: execution          # required reviewer lives here
+    defaults:
+      run:
+        working-directory: market-watch
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.order_sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Re-run gates against current state
+        run: python mw.py gates --order state/pending-order.json
+
+      - name: Apply
+        run: python mw.py apply --order state/pending-order.json --confirm
+
+      - name: Commit ledger
+        run: |
+          git config user.name  "market-watch"
+          git config user.email "market-watch@users.noreply.github.com"
+          git add state/portfolio.json
+          git commit -m "paper: apply pending order"
+          git push

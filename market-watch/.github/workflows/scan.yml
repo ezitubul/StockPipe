@@ -1,0 +1,74 @@
+# Research only. This workflow can NEVER move the ledger:
+#   - permissions are read-only, so it cannot commit state
+#   - mw.py apply is not in the allowed tool list
+#   - the only artefact is a set of JSON briefs for you to read
+name: scan
+
+on:
+  schedule:
+    # GitHub Actions cron is UTC ONLY. Israel is UTC+3 in summer and UTC+2 in
+    # winter, so any fixed UTC time drifts by an hour twice a year. Schedule
+    # generously and let `mw.py clock --require` abort the run cheaply.
+    # GitHub also delays scheduled workflows under load, sometimes by tens of
+    # minutes. Treat every fire time as approximate.
+    - cron: "5 6 * * 1-5"     # Asia has closed - leading read for the EU/TASE open
+    - cron: "0 10 * * 1-5"    # Tel Aviv and Europe mid-session
+    - cron: "45 13 * * 1-5"   # the overlap window - TASE + EU open, NY opening
+    - cron: "20 20 * * 1-5"   # New York close
+  workflow_dispatch:
+    inputs:
+      require_open:
+        description: Market that must be open, or ANY
+        default: ANY
+
+permissions:
+  contents: read              # deliberately not write - see SECURITY.md
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: market-watch
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Session guard
+        id: guard
+        continue-on-error: true
+        run: python mw.py clock --require TASE --require US --require XETRA --require TSE
+
+      - name: Abort when every venue is shut
+        if: steps.guard.outcome == 'failure'
+        run: |
+          echo "No target venue open. Nothing to scan." >> $GITHUB_STEP_SUMMARY
+          exit 0
+
+      - uses: anthropics/claude-code-action@v1
+        if: steps.guard.outcome == 'success'
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Scheduled runs are actor-less, so the action's bot check must be
+          # told this one is expected.
+          allowed_bots: "github-actions[bot]"
+          # This action has no working-directory input and always runs from
+          # the checkout root, which is the monorepo root here, not
+          # market-watch/ - so every path below is spelled out explicitly
+          # rather than relying on .claude/ auto-discovery from a cwd.
+          prompt: |
+            Follow the procedure in market-watch/.claude/commands/scan.md, with
+            every path in it read as relative to market-watch/ (e.g. mw.py is
+            market-watch/mw.py, state/briefs/ is market-watch/state/briefs/).
+            Write briefs to market-watch/state/briefs/ and print the ranked
+            watchlist. Do NOT run `mw.py apply`. Do NOT commit anything.
+          claude_args: |
+            --allowedTools "WebSearch,WebFetch,Read,Write(./market-watch/state/briefs/**),Bash(python market-watch/mw.py status),Bash(python market-watch/mw.py clock),Bash(python market-watch/mw.py rates:*),Bash(python market-watch/mw.py quote:*),Bash(python market-watch/mw.py gates:*)"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: briefs-${{ github.run_id }}
+          path: market-watch/state/briefs/

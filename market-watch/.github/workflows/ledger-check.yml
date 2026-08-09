@@ -1,0 +1,32 @@
+# Pure Python. No API key, no model, no cost beyond runner minutes.
+# Runs the invariants that must never break, plus a stale-price alert.
+name: ledger-check
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 5 * * 1-5"     # 07:00 or 08:00 IL depending on DST - timing is not critical here
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: market-watch
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pytest
+      - name: Invariants
+        run: python -m pytest tests/ -q
+      - name: Book status
+        run: |
+          python mw.py clock
+          python mw.py status

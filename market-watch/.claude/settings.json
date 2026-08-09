@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python mw.py status:*)",
+      "Bash(python mw.py clock:*)",
+      "Bash(python mw.py quote:*)",
+      "Bash(python mw.py gates:*)",
+      "Bash(python mw.py rates:*)",
+      "Bash(python mw.py perf:*)",
+      "Bash(python mw.py risk:*)",
+      "Bash(python mw.py withdraw:*)",
+      "Bash(python mw.py apply:*)",
+      "Bash(python -m pytest:*)",
+      "Read(./**)",
+      "Write(./state/**)",
+      "WebSearch",
+      "WebFetch"
+    ],
+    "deny": [
+      "Bash(curl:*)",
+      "Bash(wget:*)",
+      "Bash(pip install:*)",
+      "Bash(npm install:*)",
+      "Read(./.env)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "WebFetch(domain:api.ibkr.com)",
+      "WebFetch(domain:localhost)",
+      "Bash(git push:*)",
+      "Write(./lib/**)",
+      "Write(./.claude/**)"
+    ]
+  },
+  "env": {
+    "MW_MODE": "PAPER"
+  }
+}

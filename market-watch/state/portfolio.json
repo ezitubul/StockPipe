@@ -1,0 +1,11 @@
+{
+  "v": 2,
+  "mode": "PAPER",
+  "cash_ag": 10000000,
+  "rates": {
+    "ILS": 1,
+    "USD": 3.01
+  },
+  "positions": [],
+  "trades": []
+}

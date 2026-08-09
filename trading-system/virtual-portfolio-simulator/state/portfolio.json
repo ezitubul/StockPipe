@@ -1,9 +1,0 @@
-{
-  "currency": "ILS",
-  "inception_date": "2026-08-04",
-  "cash_ils": 100000,
-  "positions": [],
-  "portfolio_value_ils": 100000,
-  "risk_flag": "GREEN",
-  "last_scan": null
-}

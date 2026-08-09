@@ -115,18 +115,23 @@ trading-system/
 │   └── agents/               orchestrator + validate / limit / confirm /
 │                             order / reconcile-agent + eval-checklist
 │
-├── risk-oversight/           sits above both — veto final, fail closed
-│   └── agents/               orchestrator + limits / exposure / drawdown /
-│                             unwind-agent + eval-checklist
-│
-└── virtual-portfolio-simulator/   standalone — autonomous ₪100,000 PAPER
-                              simulation, no broker/real-capital path, so it
-                              self-executes without the confirm gate above
-    ├── CLAUDE.md             routine, decision process, risk rules, fees,
-    │                         execute_virtual_trade contract
-    ├── eval-checklist.md
-    └── state/                portfolio.json + trade-log.jsonl
+└── risk-oversight/           sits above both — veto final, fail closed
+    └── agents/               orchestrator + limits / exposure / drawdown /
+                              unwind-agent + eval-checklist
 ```
+
+## Related: market-watch
+
+`../market-watch/` (repo root) is a separate, self-contained ₪100,000 PAPER
+simulation system — deterministic Python core with tests, a real CLI, real
+Claude Code subagents, and its own CI. It supersedes an earlier
+`virtual-portfolio-simulator/` scaffold that lived under this tree. It is
+deliberately **not** nested here and does not route through this tree's
+confirm-gated `executor/`: it has no broker connection or path to real
+capital, so — per its own `CLAUDE.md` — it is allowed to self-execute
+simulated fills without a human confirm step, a reasoning that would not hold
+if this system were ever wired to a real venue. See `market-watch/README.md`
+and `market-watch/CLAUDE.md` for the full design.
 
 ## Core invariants
 
