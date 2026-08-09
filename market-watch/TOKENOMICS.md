@@ -136,3 +136,16 @@ reporting.
 `mw.py ingest` appends every run to `state/ingest-log.jsonl` and reports a
 cumulative figure. After roughly twenty scans that number is measured rather
 than assumed, and it is the only one worth quoting.
+
+**Not wired in yet.** No file under `.claude/agents/` or `.claude/commands/`
+currently calls `mw.py ingest` - the scouts that fetch pages have `WebSearch`,
+`WebFetch` and nothing else, deliberately (see the security-boundary section
+above), so they have no `Bash` to invoke it with, and nothing else in the
+current flow sits between "scout fetches" and "scout writes a brief" to run it
+on their behalf. The Path A/B tables above are therefore a projection of what
+the split would save, not a measurement of what today's scans actually do -
+`state/ingest-log.jsonl` will simply stay empty until something in the
+pipeline calls it. Wiring it in cleanly needs a design decision this file
+should not make unilaterally: either give something upstream of the scouts a
+fetch-then-filter-then-dispatch step, or accept `WebFetch`'s own stripping as
+good enough and retire the unused half of the claim.

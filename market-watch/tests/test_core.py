@@ -185,6 +185,23 @@ def test_a_defensible_target_is_reported_feasible():
     assert f["feasible"]
 
 
+def test_feasibility_marks_open_positions_to_market_not_cost():
+    # cash_ag + cost_ag is invariant across any number of BUYs (fees just move
+    # from cash into cost basis 1:1), so it is always exactly START_AG for a
+    # book with only open positions - using it as "equity" silently discards
+    # every unrealised gain or loss, which is precisely what feasibility (D6)
+    # exists to catch honestly.
+    s = portfolio.blank(); s["rates"] = dict(RATES)
+    buy = dict(side="BUY", symbol="ESLT", issuer="ELBIT", market="TASE",
+               sector="defence", qty=10, px=150_000, catalyst="Q2 report 18.8",
+               rationale="record backlog and a doubled dividend",
+               sources=["Reuters", "Globes"])
+    s = portfolio.apply(s, buy)
+    s["positions"][0]["px"] = 300_000        # position has since doubled
+    f = performance.feasibility(s, 100_000)
+    assert f["equity_ag"] > portfolio.START_AG
+
+
 def test_drawdown_refuses_to_flatter_an_empty_ledger():
     assert performance.drawdown(portfolio.blank())["max_drawdown_pct"] is None
 

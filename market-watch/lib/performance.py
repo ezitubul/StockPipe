@@ -8,7 +8,7 @@ that is reported as a shortfall - never resolved by relaxing a limit.
 from collections import defaultdict
 from datetime import datetime
 
-from .portfolio import START_AG
+from .portfolio import START_AG, value
 from .risk_gates import MAX_ISSUER
 
 TAKE_PROFIT_CEILING = 0.20     # the most a single position may contribute
@@ -64,7 +64,7 @@ def feasibility(state: dict, monthly_target_ag: int, tax_rate: float = 0.25) -> 
          ceiling, caps what any one trade can contribute. The target implies a
          number of fully-sized, fully-successful trades per month.
     """
-    equity = state["cash_ag"] + sum(p["cost_ag"] for p in state["positions"])
+    equity = value(state)["equity_ag"]
     gross_needed = monthly_target_ag / (1 - tax_rate)
     required_monthly_return = gross_needed / equity if equity else float("inf")
     max_per_trade = equity * MAX_ISSUER * TAKE_PROFIT_CEILING
