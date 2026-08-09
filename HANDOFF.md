@@ -67,13 +67,19 @@ target, the context did not land and it is worth fixing before working.
   alternative, and Actions cron is not punctual - see D12. **This wiring is
   new and has not yet run against a live schedule; dispatch `scan.yml`
   manually (`workflow_dispatch`) and read the run's logs before trusting the
-  cron.** Needs an Anthropic API key in a repository secret named
-  `CLAUDE_APIKEY` (`.github/workflows/scan.yml` and `claude-smoke-test.yml`
-  read `secrets.CLAUDE_APIKEY`), plus `id-token: write` in the workflow's
-  permissions - `claude-code-action` fetches a GitHub OIDC token during its
-  own setup even with an explicit API key, and hard-fails without it. Both
-  requirements were found by actually dispatching the workflow and reading a
-  real failure, not by inspecting the action - if either changes again,
+  cron.** Authenticates via a Claude Pro/Max subscription OAuth token
+  (`claude setup-token` locally, then the printed token as a repository
+  secret named `CLAUDE_CODE_OAUTH_TOKEN` - `.github/workflows/scan.yml` and
+  `claude-smoke-test.yml` read `secrets.CLAUDE_CODE_OAUTH_TOKEN`), not a
+  pay-per-token `anthropic_api_key` - an earlier attempt with a raw API key
+  worked end to end but hit `billing_error: Credit balance is too low` on
+  the associated Anthropic Console account, distinct from every wiring
+  problem below it and not worth re-deriving if this ever gets swapped back.
+  Also needs `id-token: write` in the workflow's permissions -
+  `claude-code-action` fetches a GitHub OIDC token during its own setup
+  regardless of auth method, and hard-fails without it. Both requirements
+  were found by actually dispatching the workflow and reading a real
+  failure, not by inspecting the action - if either changes again,
   redispatch and read the run rather than guessing. If the secret is ever
   moved to an *environment* rather than staying a plain repository secret,
   the `scan`/`decide` jobs also need `environment: <name>` added, or GitHub

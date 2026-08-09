@@ -1,9 +1,10 @@
 # Isolated smoke test for the programmatic Claude Code invocation itself -
-# does claude-code-action authenticate with `CLAUDE_APIKEY` and actually run
-# a turn against this repo? Deliberately separate from scan.yml, which
-# conflates that question with market-hours guards, scout dispatch, and the
-# decide pipeline. This proves nothing about trading logic - only that the
-# wiring (secret -> action -> model -> tool call) works end to end.
+# does claude-code-action authenticate with `CLAUDE_CODE_OAUTH_TOKEN` and
+# actually run a turn against this repo? Deliberately separate from
+# scan.yml, which conflates that question with market-hours guards, scout
+# dispatch, and the decide pipeline. This proves nothing about trading
+# logic - only that the wiring (secret -> action -> model -> tool call)
+# works end to end.
 name: claude-smoke-test
 
 on:
@@ -11,8 +12,8 @@ on:
 
 permissions:
   contents: read
-  id-token: write   # claude-code-action requires this even with an explicit
-                     # anthropic_api_key - see scan.yml's comment for the detail
+  id-token: write   # claude-code-action requires this regardless of auth
+                     # method - see scan.yml's comment for the detail
 
 jobs:
   smoke-test:
@@ -25,7 +26,7 @@ jobs:
 
       - uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.CLAUDE_APIKEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           allowed_bots: "github-actions[bot]"
           prompt: |
             Run `python mw.py clock` with the Bash tool. Reply with exactly

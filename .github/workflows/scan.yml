@@ -20,6 +20,13 @@
 # TOKENOMICS.md's tiering table reserves for the human conversation and
 # design changes, not for scouting/deciding. Found live: the first run
 # after removing the API-key/OIDC blockers silently ran on Opus.
+#
+# Auth is claude_code_oauth_token (a Pro/Max subscription token from
+# `claude setup-token`, stored as the CLAUDE_CODE_OAUTH_TOKEN secret), not
+# anthropic_api_key - a raw API key bills separately per token against
+# Anthropic Console credits; the OAuth token draws on the subscription's
+# existing quota instead. Switched after confirming the API-key path was
+# fully wired but blocked purely on a $0 Console credit balance.
 name: scan
 
 on:
@@ -46,10 +53,10 @@ on:
 
 permissions:
   contents: read              # workflow default - decide overrides this itself
-  id-token: write              # claude-code-action requires this even with an
-                                # explicit anthropic_api_key - it fetches a GitHub
-                                # OIDC token as part of its own setup regardless,
-                                # and hard-fails after 3 retries without this.
+  id-token: write              # claude-code-action requires this regardless of
+                                # auth method - it fetches a GitHub OIDC token as
+                                # part of its own setup either way, and hard-fails
+                                # after 3 retries without this.
 
 jobs:
   scan:
@@ -88,7 +95,7 @@ jobs:
       - uses: anthropics/claude-code-action@v1
         if: steps.guard.outcome == 'success'
         with:
-          anthropic_api_key: ${{ secrets.CLAUDE_APIKEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           # Scheduled runs are actor-less, so the action's bot check must be
           # told this one is expected.
           allowed_bots: "github-actions[bot]"
@@ -133,7 +140,7 @@ jobs:
 
       - uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.CLAUDE_APIKEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           allowed_bots: "github-actions[bot]"
           # No WebSearch/WebFetch here - see the header comment and D12/D14.
           prompt: |
