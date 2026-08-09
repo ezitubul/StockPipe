@@ -33,7 +33,12 @@ fetches a GitHub OIDC token as part of its own setup even when an explicit
 API key is supplied, and hard-fails without it. Both were found by actually
 dispatching the workflow and reading the failure, not by inspection -
 dispatch it yourself (`workflow_dispatch`) after any change here and read
-the run before trusting the cron.
+the run before trusting the cron. Beyond the workflow itself, the Anthropic
+account behind `CLAUDE_APIKEY` needs a positive credit balance
+(console.anthropic.com -> Billing) - a real API call fails with
+`billing_error: Credit balance is too low` otherwise, distinguishable from
+every config problem above by getting all the way to a genuine model call
+before failing.
 
 The manual path (`/propose` then `/confirm`, or `execute.yml` dispatched by
 hand behind a required reviewer) still exists for anything you want to decide
