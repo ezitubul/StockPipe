@@ -11,6 +11,8 @@ on:
 
 permissions:
   contents: read
+  id-token: write   # claude-code-action requires this even with an explicit
+                     # anthropic_api_key - see scan.yml's comment for the detail
 
 jobs:
   smoke-test:
