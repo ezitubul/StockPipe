@@ -82,7 +82,7 @@ jobs:
       - uses: anthropics/claude-code-action@v1
         if: steps.guard.outcome == 'success'
         with:
-          anthropic_api_key: ${{ secrets.claude_key }}
+          anthropic_api_key: ${{ secrets.CLAUDE_APIKEY }}
           # Scheduled runs are actor-less, so the action's bot check must be
           # told this one is expected.
           allowed_bots: "github-actions[bot]"
@@ -127,7 +127,7 @@ jobs:
 
       - uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.claude_key }}
+          anthropic_api_key: ${{ secrets.CLAUDE_APIKEY }}
           allowed_bots: "github-actions[bot]"
           # No WebSearch/WebFetch here - see the header comment and D12/D14.
           prompt: |

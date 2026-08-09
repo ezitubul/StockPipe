@@ -1,6 +1,6 @@
 # Isolated smoke test for the programmatic Claude Code invocation itself -
-# does claude-code-action authenticate with `claude_key` and actually run a
-# turn against this repo? Deliberately separate from scan.yml, which
+# does claude-code-action authenticate with `CLAUDE_APIKEY` and actually run
+# a turn against this repo? Deliberately separate from scan.yml, which
 # conflates that question with market-hours guards, scout dispatch, and the
 # decide pipeline. This proves nothing about trading logic - only that the
 # wiring (secret -> action -> model -> tool call) works end to end.
@@ -25,7 +25,7 @@ jobs:
 
       - uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.claude_key }}
+          anthropic_api_key: ${{ secrets.CLAUDE_APIKEY }}
           allowed_bots: "github-actions[bot]"
           prompt: |
             Run `python mw.py clock` with the Bash tool. Reply with exactly
