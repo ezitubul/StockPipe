@@ -34,4 +34,4 @@ jobs:
             real command against this checkout, not just that the action
             authenticated.
           claude_args: |
-            --allowedTools "Bash(python mw.py clock)"
+            --model claude-sonnet-5 --allowedTools "Bash(python mw.py clock)"

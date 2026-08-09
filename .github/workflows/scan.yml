@@ -14,6 +14,12 @@
 #
 # The job that reads the open web and the job that holds a repo-write token
 # are never the same job. That is the whole safety property this file has.
+#
+# Both jobs pin --model claude-sonnet-5 in claude_args - claude-code-action
+# has no dedicated model input and defaults to Opus otherwise, which
+# TOKENOMICS.md's tiering table reserves for the human conversation and
+# design changes, not for scouting/deciding. Found live: the first run
+# after removing the API-key/OIDC blockers silently ran on Opus.
 name: scan
 
 on:
@@ -97,7 +103,7 @@ jobs:
             which briefs landed, anything a scout could not verify).
             Do NOT run `mw.py apply`. Do NOT commit anything.
           claude_args: |
-            --allowedTools "Agent,WebSearch,WebFetch,Read,Write(./state/briefs/**),Bash(python mw.py status),Bash(python mw.py clock),Bash(python mw.py rates:*),Bash(python mw.py quote:*),Bash(python mw.py gates:*)"
+            --model claude-sonnet-5 --allowedTools "Agent,WebSearch,WebFetch,Read,Write(./state/briefs/**),Bash(python mw.py status),Bash(python mw.py clock),Bash(python mw.py rates:*),Bash(python mw.py quote:*),Bash(python mw.py gates:*)"
 
       - uses: actions/upload-artifact@v4
         if: always()
@@ -186,4 +192,4 @@ jobs:
             is nothing staged, skip the commit rather than creating an empty
             one.
           claude_args: |
-            --allowedTools "Agent,Read,Write(./state/**),Bash(python mw.py status),Bash(python mw.py rates:*),Bash(python mw.py risk:*),Bash(python mw.py withdraw:*),Bash(python mw.py perf:*),Bash(python mw.py gates:*),Bash(python mw.py apply:*),Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git config:*),Bash(git diff:*),Bash(git status:*)"
+            --model claude-sonnet-5 --allowedTools "Agent,Read,Write(./state/**),Bash(python mw.py status),Bash(python mw.py rates:*),Bash(python mw.py risk:*),Bash(python mw.py withdraw:*),Bash(python mw.py perf:*),Bash(python mw.py gates:*),Bash(python mw.py apply:*),Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git config:*),Bash(git diff:*),Bash(git status:*)"
