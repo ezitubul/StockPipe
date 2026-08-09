@@ -33,10 +33,3 @@ the run before trusting the cron.
 The manual path (`/propose` then `/confirm`, or `execute.yml` dispatched by
 hand behind a required reviewer) still exists for anything you want to decide
 yourself instead.
-
-## Also in this repo
-
-`trading-system/` is an earlier, separate design (a three-subtree agent
-hierarchy built around a structural, always-on human confirm gate before any
-order) predating this project and not under active development. Kept for
-reference; see `trading-system/README.md`.
