@@ -24,10 +24,15 @@ around Asia close, TASE/EU midday, the TASE+EU+NY overlap, and the NY close):
 (never the open web) and applies through `lib/risk_gates.py` with no human
 confirmation - see the Autonomy section in `CLAUDE.md` and D5/D12/D14 in
 `DECISIONS.md` for why that split is what makes unattended operation safe
-rather than reckless. Requires an Anthropic API key in a secret named
-`claude_key` (repository secret, or an environment secret on an environment
-the `scan`/`decide` jobs declare via `environment:`).
-This wiring is new - dispatch it manually once (`workflow_dispatch`) and read
+rather than reckless. Requires an Anthropic API key in a repository secret
+named `CLAUDE_APIKEY` (Settings -> Secrets and variables -> Actions ->
+Repository secrets - not an environment secret, which needs `environment:`
+added to every job that reads it, including scheduled ones). Also needs
+`id-token: write` in the workflow's permissions - `claude-code-action`
+fetches a GitHub OIDC token as part of its own setup even when an explicit
+API key is supplied, and hard-fails without it. Both were found by actually
+dispatching the workflow and reading the failure, not by inspection -
+dispatch it yourself (`workflow_dispatch`) after any change here and read
 the run before trusting the cron.
 
 The manual path (`/propose` then `/confirm`, or `execute.yml` dispatched by

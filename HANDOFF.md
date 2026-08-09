@@ -67,11 +67,17 @@ target, the context did not land and it is worth fixing before working.
   alternative, and Actions cron is not punctual - see D12. **This wiring is
   new and has not yet run against a live schedule; dispatch `scan.yml`
   manually (`workflow_dispatch`) and read the run's logs before trusting the
-  cron.** Needs an Anthropic API key in a secret named `claude_key`
-  (`.github/workflows/scan.yml` reads `secrets.claude_key`) or the scheduled
-  runs simply fail at the `claude-code-action` step. If it's an *environment*
-  secret rather than a plain repository secret, the `scan`/`decide` jobs also
-  need `environment: <name>` added, or GitHub won't expose it to them.
+  cron.** Needs an Anthropic API key in a repository secret named
+  `CLAUDE_APIKEY` (`.github/workflows/scan.yml` and `claude-smoke-test.yml`
+  read `secrets.CLAUDE_APIKEY`), plus `id-token: write` in the workflow's
+  permissions - `claude-code-action` fetches a GitHub OIDC token during its
+  own setup even with an explicit API key, and hard-fails without it. Both
+  requirements were found by actually dispatching the workflow and reading a
+  real failure, not by inspecting the action - if either changes again,
+  redispatch and read the run rather than guessing. If the secret is ever
+  moved to an *environment* rather than staying a plain repository secret,
+  the `scan`/`decide` jobs also need `environment: <name>` added, or GitHub
+  won't expose it to them.
 * No live track record exists. `mw.py withdraw` correctly returns zero and will
   keep returning zero until twelve months of real paper history exist. The
   `decide` job now gives that history a chance to actually accumulate instead
