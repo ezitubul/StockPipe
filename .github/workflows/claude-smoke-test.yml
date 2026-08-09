@@ -27,6 +27,10 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.CLAUDE_APIKEY }}
           allowed_bots: "github-actions[bot]"
+          show_full_output: "true"   # diagnostic only - the last run's turn
+                                      # failed instantly ($0 cost, not a
+                                      # permission denial) with the real
+                                      # error hidden; drop this once root-caused
           prompt: |
             Run `python mw.py clock` with the Bash tool. Reply with exactly
             its JSON output and nothing else - no preamble, no markdown
