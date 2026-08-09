@@ -267,3 +267,51 @@ one is added later, pin it and let it age first.
 **Guarded by** `test_boilerplate_is_removed_before_any_model_sees_it`,
 `test_one_wire_story_across_outlets_counts_once`,
 `test_irrelevant_articles_never_reach_a_context`.
+
+---
+
+## D14 - The scheduled path decides and applies unattended; D12's split is what makes that safe
+
+**Decided.** `scan.yml` runs two jobs. `scan` is unchanged: read-only, a model,
+`WebSearch`/`WebFetch`, produces briefs, can never write. A new job, `decide`,
+runs the full `synthesizer` -> `risk-manager` -> `portfolio-manager` pipeline
+against those briefs, and - if `lib/risk_gates.py` passes the resulting order -
+calls `mw.py apply --agent` and commits `state/` itself. No human reviews the
+individual trade. `execute.yml` (manual dispatch, required reviewer) is
+unchanged and remains for the interactive `/propose`/`/confirm` path.
+
+**Why now, and why this was not simply "turn CI fully autonomous."** D5
+already decided that PAPER-mode autonomy is safe: nothing in a simulation is
+irreversible, so a human approving each trade adds friction without reducing
+risk. Before this decision that reasoning was implemented locally
+(`portfolio-manager` + `mw.py apply --agent` work in an interactive session)
+but not on the schedule - `scan.yml` stopped at a set of briefs nobody
+automatically acted on, which is D5's conclusion applied to half the pipeline.
+
+The reason it stopped there originally is D12, and D12 is not superseded by
+this decision - it is what this decision is built on. D12's actual claim is
+narrower than "CI can't be autonomous": it is that no single CI job may hold
+both web access (hostile input) and a write-scoped credential, because the
+threat there is to the repository and its secrets, not to the (fake) money,
+and PAPER-mode reasoning does not touch that threat at all. `decide` satisfies
+D12 by construction: it has write permissions and a model, but it is never
+given `WebSearch`/`WebFetch`, so the only thing a poisoned page can reach is
+whatever `scan` chose to write into a brief - one layer removed from the raw
+page, and still bounded by the same deterministic gates every other order goes
+through (see the residual-risk note in `SECURITY.md`).
+
+**What was rejected.** Giving `scan` itself write access and letting it decide
+inline - that is exactly the merge D12 forbids, regardless of how the decision
+step is gated, because the web-reading job would then also hold the credential
+worth stealing. Also rejected: skipping the gates for schedule-originated
+orders on the theory that `portfolio-manager` already decided - the gates
+exist independently of who or what proposed the order, and a compromised
+brief is exactly the case they are for.
+
+**Also decided.** `state/decisions/` is no longer gitignored. A decision
+`portfolio-manager` cannot record because it evaporates with the container is
+a decision `calibration` can never score, and calibration is the only thing
+that can tell whether this system has skill or has been lucky (see
+`calibration.md` and `HANDOFF.md`). `state/briefs/` stays gitignored - briefs
+are `scan`'s ephemeral working material, not part of the system's judgement
+record, and remain visible via the workflow's uploaded artifact instead.

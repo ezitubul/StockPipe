@@ -63,7 +63,7 @@ leading indicator, not a venue.
 
     lib/        deterministic core - markets, money, session, portfolio, gates
     mw.py       CLI. Every number an agent quotes comes from here
-    tests/      21 tests. They must pass before any change to lib/ ships
+    tests/      38 tests. They must pass before any change to lib/ ships
     .claude/agents/    seven subagents, JSON out only
     .claude/commands/  /scan /propose /confirm /status /rates /halt
     state/      portfolio.json and dated scout briefs
@@ -79,6 +79,14 @@ last thing standing between a bug and an irreversible loss. In a simulation
 there is nothing irreversible, so autonomy costs nothing. The moment real money
 is involved that reasoning inverts completely, and `--agent` stops existing
 rather than becoming configurable.
+
+This runs on the schedule, not just interactively: `.github/workflows/scan.yml`'s
+`decide` job fires after every scan and applies through the same gates with no
+human in that turn. See D14 - the reason this took a second job rather than
+just adding write access to `scan` is D12, which is about protecting the
+repository and its secrets from a poisoned page, a concern PAPER-mode autonomy
+does not touch. `execute.yml` (manual dispatch, required reviewer) still exists
+for the interactive `/propose`/`/confirm` path.
 
 ## Targets
 

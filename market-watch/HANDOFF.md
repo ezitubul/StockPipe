@@ -2,7 +2,7 @@
 
     tar xzf market-watch.tgz && cd market-watch
     git init && git add -A && git commit -m "market-watch: paper trading research system"
-    python -m pytest tests/ -q      # 33 tests - run this first, always
+    python -m pytest tests/ -q      # 38 tests - run this first, always
     claude
 
 ## Do not run /init
@@ -62,12 +62,21 @@ target, the context did not land and it is worth fixing before working.
 
 ## What is still open
 
-* Scheduling: no cron or launchd unit is included. GitHub Actions is wired but
-  is not punctual - see D12.
+* Scheduling: GitHub Actions cron drives it end to end now - `scan` then
+  `decide` (D14) - but there's no cron or launchd unit for a self-hosted
+  alternative, and Actions cron is not punctual - see D12. **This wiring is
+  new and has not yet run against a live schedule; dispatch `scan.yml`
+  manually (`workflow_dispatch`) and read the run's logs before trusting the
+  cron.** Needs `ANTHROPIC_API_KEY` set as a repository secret, or the
+  scheduled runs simply fail at the `claude-code-action` step.
 * No live track record exists. `mw.py withdraw` correctly returns zero and will
-  keep returning zero until twelve months of real paper history exist.
-* Correlations are supplied by hand to `mw.py risk --corr`. Estimating them from
-  price history is unbuilt.
+  keep returning zero until twelve months of real paper history exist. The
+  `decide` job now gives that history a chance to actually accumulate instead
+  of stopping at an unread brief each run.
+* Correlations for the *scheduled* `decide` job are the model's own estimate
+  (there's no human to hand `mw.py risk --corr` values to) - treat its risk
+  read as a lower-confidence pass compared to an interactive session, and
+  weight `calibration`'s monthly review accordingly.
 
 ## Subagents
 
@@ -96,3 +105,14 @@ Everything that touches the ledger never reads the web.
 Scoping `Bash` is done in `.claude/settings.json`, which also denies `git push`
 and writes to `lib/` and `.claude/` - an agent may move the ledger but not
 rewrite its own limits.
+
+That file governs **local interactive sessions only** - the `claude-code-action`
+runs in `.github/workflows/` never auto-discover it (no working-directory
+input, and it lives at `market-watch/.claude/settings.json`, not the checkout
+root), so each CI job sets its own `--allowedTools` string directly in its
+workflow step. `scan.decide` is deliberately given `Bash(git push:*)`, which
+`.claude/settings.json` denies locally - that's correct, not a bypass: a local
+session has you to commit; `decide` has nobody, so pushing its own commit is
+the point, not a hole. Any change to a workflow's `--allowedTools` is a change
+to that job's actual privilege set regardless of what `.claude/settings.json`
+says.

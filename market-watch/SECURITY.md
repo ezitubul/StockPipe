@@ -9,11 +9,25 @@ web fetches to broker endpoints and localhost.
 If a future task asks to wire this to a live account, that is a new system with
 a different threat model. It does not belong in this repository.
 
-## Human confirmation is structural
+## Human confirmation - structural on the manual path, deliberately absent on the scheduled path
 
-`mw.py apply` without `--confirm` exits 2 and writes nothing. `/propose` is
-forbidden from calling apply at all. The confirmation is mine, typed, in a turn
-of its own. A passing gate set is not consent, and neither is a confident thesis.
+Two distinct paths reach `mw.py apply`, and they authorise differently:
+
+* **Manual** (`/propose` then `/confirm`, or `execute.yml` dispatched by hand):
+  `mw.py apply` without `--confirm` exits 2 and writes nothing. `/propose` is
+  forbidden from calling apply at all. The confirmation is mine, typed, in a
+  turn of its own. A passing gate set is not consent, and neither is a
+  confident thesis.
+* **Scheduled** (`decide`, see below and D5/D14 in DECISIONS.md): `mw.py apply
+  --agent` authorises a write with no human in that turn at all, and it works
+  only while `mode` is `PAPER` - the flag exits 3 otherwise, unconditionally.
+  This is not a gap in the manual rule above; it is D5's own reasoning
+  ("nothing is irreversible in a simulation, so autonomy is free") actually
+  wired end to end, rather than stopping halfway at a set of briefs nobody
+  automatically acts on.
+
+Either way, the deterministic gates in `lib/risk_gates.py` still run and still
+block - autonomy removes the human, not the gates.
 
 ## Prompt injection
 
@@ -26,6 +40,20 @@ Scouts hold `WebSearch` and `WebFetch` and nothing else. They cannot write
 state, cannot execute, and cannot reach the ledger. The blast radius of a
 poisoned page is a bad line in a JSON brief that the synthesizer will see and
 that the gates will still block.
+
+**Residual risk with `decide` running unattended.** A poisoned page could
+still get a false claim laundered into a brief (a fabricated catalyst, an
+invented source) that `decide` then reads as data, with no human between the
+brief and the order. The mechanical gates do not care whether a catalyst is
+*true* - they only check that one is *present* and long enough. `decide`'s own
+allowlist is narrow on purpose: the `mw.py` subcommands, `git add/commit/push/
+config/diff/status`, and `Write` scoped to `state/**` - nothing else, and a
+headless run has no human to approve a tool call outside that list, so it is
+simply denied. A laundered instruction in a brief can therefore steer a trade
+within the gates' bounds; it cannot reach a secret, run arbitrary code, or
+touch a file outside `state/`. Accept "a bad simulated trade, sized like every
+other trade" as the actual, bounded cost of removing the human from the loop,
+not as an oversight.
 
 ## No secrets in state
 
@@ -47,19 +75,26 @@ a path to a secret and to your repository.
 
 The split in `.github/workflows/` exists for that reason:
 
-| Workflow | Permissions | Model | Can move the ledger |
-|---|---|---|---|
-| `ledger-check` | read | none | no |
-| `scan` | read | yes | no |
-| `execute` | write | none | yes, after your approval |
+| Job | Permissions | Model | Web access | Can move the ledger |
+|---|---|---|---|---|
+| `ledger-check` | read | none | no | no |
+| `scan.scan` | read | yes | **yes** | no |
+| `scan.decide` | **write** | yes | no | yes, unattended (D5/D14) |
+| `execute` | **write** | none | no | yes, after your approval |
 
-The scan job is the one that reads hostile input, and it is the one with no
-write permission and no ledger tooling in its allowlist. The execute job holds
-write permission but runs no model at all and is gated behind an environment
-with a required reviewer. Neither job has both capabilities.
+The rule is not "read xor write" - it's **no job may hold both web access and
+a write-scoped token**. `scan.scan` has the web and a model, and nothing else:
+no ledger tooling in its allowlist, no write permission at all. `scan.decide`
+has write and a model, but no `WebSearch`/`WebFetch` - it only ever reads the
+JSON `scan.scan` already produced and committed to the run's artifact, never a
+raw fetched page. `execute` has write and no model at all, gated behind a
+required-reviewer environment, for the manual path. No single job combines
+"reads hostile input" with "holds a credential that can change the repository
+or the ledger."
 
-Never merge the two. Never add `Bash(python mw.py apply:*)` to the scan job's
-allowlist. If a scan run tells you it needs write access to finish, that is the
+Never add `WebSearch`/`WebFetch` to `scan.decide`'s or `execute`'s allowlist,
+and never add `Bash(python mw.py apply:*)` to `scan.scan`'s. If either job
+tells you it needs a capability outside this table to finish, that is the
 finding, not the fix.
 
 ## Known limits of the CI schedule
